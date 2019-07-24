@@ -85,7 +85,9 @@ extern "C" {
 #define BLE_SM_IOACT_DISP                       3
 #define BLE_SM_IOACT_NUMCMP                     4
 #define BLE_SM_IOACT_OOB_SC                     5
-#define BLE_SM_IOACT_MAX_PLUS_ONE               6
+#define BLE_SM_IOACT_JUSTWORKS                  6
+#define BLE_SM_IOACT_REJECT                     7
+#define BLE_SM_IOACT_MAX_PLUS_ONE               8
 
 struct ble_sm_sc_oob_data {
     /** Random Number. */

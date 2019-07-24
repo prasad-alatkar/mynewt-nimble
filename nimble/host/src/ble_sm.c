@@ -837,6 +837,23 @@ ble_sm_read_bond(uint16_t conn_handle, struct ble_store_value_sec *out_bond)
 }
 
 /**
+ * The application is queried about pairing request, depending upon the
+ * application's response the pairing request is accepted or rejected
+ */
+static int
+ble_sm_pairing_req(uint16_t conn_handle, struct ble_sm_pair_cmd *req)
+{
+    struct ble_gap_pairing_req pair_req;
+
+    pair_req.conn_handle = conn_handle;
+    pair_req.io_cap = req->io_cap;
+    pair_req.oob_data_flag = req->oob_data_flag;
+    pair_req.authreq = req->authreq;
+
+    return ble_gap_pairing_req_event(&pair_req);
+}
+
+/**
  * Checks if the specified peer is already bonded.  If it is, the application
  * is queried about how to proceed: retry or ignore.  The application should
  * only indicate a retry if it deleted the old bond.
@@ -1791,6 +1808,18 @@ ble_sm_pair_req_rx(uint16_t conn_handle, struct os_mbuf **om,
 
     ble_hs_unlock();
 
+    /* Ask the application to provide response if pairing is to be accepted or
+     * not
+     */
+    rc = ble_sm_pairing_req(conn_handle, req);
+    if (rc != 0) {
+        /* The app indicated that the pairing request should be rejected. */
+        res->sm_err = BLE_SM_ERR_AUTHREQ;
+        res->app_status = BLE_HS_SM_US_ERR(rc);
+        res->execute = 0;
+        return;
+    }
+
     /* Check if there is storage capacity for a new bond.  If there isn't, ask
      * the application to make room.
      */
@@ -2628,6 +2657,18 @@ ble_sm_inject_io(uint16_t conn_handle, struct ble_sm_io *pkey)
     struct ble_sm_proc *proc;
     int rc;
     uint8_t action;
+
+    /* Response given by application to accept or reject pairing */
+    if (pkey->action == BLE_SM_IOACT_JUSTWORKS ||
+        pkey->action == BLE_SM_IOACT_REJECT) {
+        if (pkey->action == BLE_SM_IOACT_REJECT) {
+            rc = BLE_HS_EREJECT;
+        } else {
+            rc = 0;
+        }
+        /* If not given explicit reject, assume accepted with JUSTWORKS */
+        return rc;
+    }
 
     memset(&res, 0, sizeof res);
 
