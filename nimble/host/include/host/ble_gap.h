@@ -1215,6 +1215,23 @@ struct ble_gap_ext_adv_params {
 };
 
 /**
+ * Configure LE Data Length in controller (OGF = 0x08, OCF = 0x0022).
+ *
+ * @param conn_handle      Connection handle.
+ * @param tx_octets        The preferred value of payload octets that the Controller
+ *                         should use for a new connection (Range
+ *                         0x001B-0x00FB).
+ * @param tx_time          The preferred maximum number of microseconds that the local Controller
+ *                         should use to transmit a single link layer packet
+ *                         (Range 0x0148-0x4290).
+ *
+ * @return              0 on success,
+ *                      other error code on failure.
+ */
+int ble_hs_hci_util_set_data_len(uint16_t conn_handle, uint16_t tx_octets,
+                                 uint16_t tx_time);
+
+/**
  * Configure extended advertising instance
  *
  * @param instance            Instance ID
